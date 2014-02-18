@@ -1,0 +1,322 @@
+﻿@{
+    Layout = "~/Views/Shared/_SiteLayout.cshtml";
+    Page.Title = "Paybble";
+}
+
+@section featured {
+<section class="featured">
+    <div class="content-wrapper">
+        <hgroup class="title">
+            <h2>Welcome to</h2>
+            <h1>@Page.Title.</h1>
+        </hgroup>
+        <p>
+            With <strong>Paybble</strong> you could checkout and pay safely using only wearable devices. <br/>
+            Identify your checkout, view &amp; authorise your payment without ever having to reach for your wallet.
+        </p>
+    </div>
+</section>
+}
+<script type="text/javascript">
+    angular.module('App', ['ngAnimate']);
+
+    function PaybbleCtrl($scope, $http) {
+
+        var API = "http://paybble.azure-mobile.net/API/";
+        var NEARBYDEVICES = "POSGETNEARBYDEVICES?posid=";
+        var PAYMENTREQUEST = "POSCREATEPAYMENTREQUEST?posid=";
+        var GETPAYMENT = "POSGETPAYMENT?transactionid=";
+        var POSID = "1EF1E0DA-1DBF-4628-84BA-5B217A32E314";
+
+        $scope.steps = ['customer', 'cart', 'payment', 'result'];
+        $scope.stepIndices = { CustomerStep: 0, CartStep: 1, PaymentStep: 2, ResultStep: 3 };
+
+        $scope.products = [
+            { name: "Orange", photo: "orange.jpg", net: 5.20 },
+            { name: "Melon", photo: "melon.jpg", net: 11.20 },
+            { name: "Papaya", photo: "papaya.jpg", net: 8.70 },
+            { name: "Pear", photo: "pear.jpg", net: 6.40 },
+            { name: "Latte", photo: "latte.jpg", net: 8.80 },
+            { name: "Espresso", photo: "espresso.jpg", net: 6.40 },
+            { name: "Americano", photo: "americano.jpg", net: 6.40 },
+            { name: "Tea", photo: "tea.jpg", net: 6.40 },
+            { name: "Biscotti", photo: "biscotti.jpg", net: 4.20 },
+            { name: "Cookie", photo: "cookies.jpg", net: 4.20 },
+            { name: "Gingerbread", photo: "gingerbread.jpg", net: 4.20 },
+            { name: "Pie", photo: "blueberrypie.jpg", net: 12.30 }
+        ];
+
+        $scope.setStep = function(idx) {
+            $scope.stepSelected = $scope.steps[idx];
+        };
+
+        $scope.getCustomerPhoto = function (cust) {
+            if (cust == null) {
+                return "";
+            }
+            if (typeof cust.photo == 'undefined')
+                return "/Content/Customers/silhouette.jpg";
+            return cust.photo;
+        };
+        $scope.getCustomerName = function (cust) {
+            if (cust == null) {
+                return "";
+            }
+            return cust.name;
+        };
+
+        $scope.getProductPhoto = function (prod) {
+            if (typeof prod.photo == 'undefined')
+                return "/Content/Products/product.png";
+            return "/Content/Products/" + prod.photo;
+        };
+
+        $scope.chooseCustomer = function (cust) {
+            window.clearInterval($scope.customerInterval);
+            delete $scope.customerInterval;
+            $scope.selectedCustomer = cust;
+            $scope.setStep($scope.stepIndices.CartStep);
+        };
+
+        $scope.chooseProduct = function (prod) {
+            var matches = $.grep(this.basket, function (el) { return el.name == prod.name; });
+            if (matches.length == 0) {
+                $scope.basket.push({ name: prod.name, photo: prod.photo, net: prod.net.toFixed(2), count: 1, total: 0.0 });
+                $scope.recalc();
+            } else {
+                $scope.increment(matches[0]);
+            }
+        };
+
+        $scope.increment = function(item) {
+            item.count++;
+            $scope.recalc();
+        };
+
+        $scope.decrement = function(item) {
+            item.count--;
+            if (item.count == 0) {
+                for (var idx = 0; idx < this.basket.length; idx++) {
+                    if ($scope.basket[idx].name == item.name) {
+                        $scope.basket.splice(idx, 1);
+                    }
+                }
+            }
+            $scope.recalc();
+        };
+        
+        $scope.recalc = function () {
+            var subtotal = 0;
+            $scope.basket.forEach(function(item) {
+                var total = item.count * item.net;
+                subtotal += total;
+                item.total = total.toFixed(2);
+            });
+            $scope.totalNet = subtotal.toFixed(2);
+        };
+
+        $scope.finishTransaction = function(message) {
+            window.clearInterval($scope.activeTxStatus.interval);
+            $scope.activeTxStatus.txMessage = message;
+            $scope.setStep($scope.stepIndices.ResultStep);
+        };
+
+        $scope.clearTransaction = function() {
+            $scope.activeTxStatus = null;
+            $scope.restartNow();
+        };
+
+        $scope.paymentConfirmed = function () {
+            $scope.finishTransaction("Payment Confirmed");
+        };
+
+        $scope.paymentDeclined = function () {
+            $scope.finishTransaction("Payment Declined");
+        };
+
+
+        $scope.processPendingTransaction = function () {
+            var request = "/Paybble/PaymentStatus/?txId=" + $scope.activeTxStatus.id;
+            $http.get(request).success(function(data) {
+                switch (data.status) {
+                    case 0:
+                        $scope.paymentDeclined();
+                        break;
+
+                    case 1:
+                        $scope.paymentConfirmed();
+                        break;
+                        
+                    case -1:
+                        break;
+                        
+                    default:
+                        break;
+                }
+            });
+        };
+
+        $scope.checkoutNow = function() {
+            var device = $scope.selectedCustomer.deviceId;
+            var amount = $scope.totalNet;
+            var request = "/Paybble/RequestPayment?posId=" + POSID
+                + "&posName=Lobby Demo"
+                + "&deviceId=" + device
+                + "&amount=" + amount;
+            $http.get(request).success(function(data) {
+                $scope.activeTxStatus = data;
+                $scope.setStep($scope.stepIndices.PaymentStep);
+                $scope.activeTxStatus.interval = window.setInterval(function () {
+                    $scope.processPendingTransaction();
+                }, 2000);
+            });
+        };
+
+        $scope.refreshCustomers = function () {
+            $http
+                .get("/Paybble/NearbyDevices?posId=" + POSID)
+                .success(function (data) {
+                    $scope.customers = [];
+                    data.forEach(function (el) {
+                        $scope.customers.push({ name: el.username, photo: el.userimageurl, deviceId: el.id });
+                    });
+                });
+        };
+        
+        $scope.restartNow = function () {
+            $scope.refreshCustomers();
+            $scope.customerInterval = window.setInterval(function () { $scope.refreshCustomers(); }, 1000);
+            $scope.selectedCustomer = null;
+            $scope.setStep($scope.stepIndices.CustomerStep);
+            $scope.basket = [];
+            $scope.totalNet = 0.00;
+        };
+
+        $scope.restartNow();
+    }
+</script>
+
+<div ng-app>
+    <div ng-controller="PaybbleCtrl">
+        <div class="animate-switch-container" ng-switch on="stepSelected">
+            <div class="animate-switch" ng-switch-when="customer" ng-model="$scope">
+                <h3>Customers in Queue</h3>
+
+                <ol class="customer">
+                    <li ng-repeat="cust in customers">
+                        <div class="customerName">{{cust.name}}</div>
+                        <div class="customerImage">
+                            <img ng-model="$parent" alt="{{$parent.getCustomerName(cust)}}" ng-src="{{$parent.getCustomerPhoto(cust)}}" class="customerPhoto"/>
+                        </div>
+                        <div class="customerClick" ng-class="{customerHover:custHover}" ng-mouseenter="custHover = true" ng-mouseleave="custHover = false" ng-click="chooseCustomer(cust)">
+                            &nbsp;
+                        </div>
+                    </li>
+                </ol>
+            </div>
+            <div class="animate-switch" ng-switch-when="cart" ng-model="$scope">
+                <div class="checkoutCol">
+                    <div class="selectedCustomer">
+                        Customer: {{selectedCustomer.name}}
+                        <img alt="{{$parent.getCustomerName(selectedCustomer)}}" ng-src="{{getCustomerPhoto(selectedCustomer)}}" class="selectedCustomerPhoto"/>
+                    </div>
+                    <div class="products">
+                        <ol class="product">
+                            <li ng-repeat="prod in products">
+                                <div class="productImage">
+                                    <img alt="{{prod.name}}" ng-src="{{$parent.getProductPhoto(prod)}}" class="productPhoto"/><br/>
+                                </div>
+                                <div class="productName">
+                                    {{prod.name}}
+                                </div>
+                                <div class="productPrice">
+                                    <strong>{{prod.net.toFixed(2)}}</strong>
+                                </div>
+                                <div class="productClick" ng-class="{productHover:prodHover}" ng-mouseenter="prodHover = true" ng-mouseleave="prodHover = false" ng-click="chooseProduct(prod)">
+                                    &nbsp;
+                                </div>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="checkoutCol">
+                    <div class="cart">
+                        <button ng-click="$parent.restartNow()" class="restart" type="submit">
+                            <img alt="Checkout Now" src="~/Images/Trash.png"  class="checkout"/> Restart
+                        </button>
+                        <button ng-click="$parent.checkoutNow()" class="checkout" type="submit">
+                            <img alt="Checkout Now" src="~/Images/cart.png"  class="checkout"/> Checkout Now
+                        </button>
+                        <table class="basket">
+                            <tr>
+                                <th colspan="2" style="min-width: 75px">Item</th>
+                                <th colspan="3" style="min-width: 160px">#</th>
+                                <th colspan="1" style="min-width: 90px">Price</th>
+                                <th colspan="1" style="min-width: 90px">Total</th>
+                            </tr>
+                            <tr ng-repeat="item in $parent.basket">
+                                <td style="padding-right: 5px;">
+                                    {{item.name}}
+                                </td>
+                                <td>
+                                    <img alt="{{itme.name}}" ng-src="{{getProductPhoto(item)}}" class="selectedFruitPhoto"/>
+                                </td>
+                                <td style="padding: 0px;">
+                                    <button class="plusminus" ng-click="decrement(item)"><img alt="decrement" src="~/Images/Minus.png" class="plusminus"/></button>
+                                </td>
+                                <td>
+                                    <input type="text" readonly="readonly" ng-model="item.count" class="itemCount"/>
+                                </td>
+                                <td style="padding: 0px;">
+                                    <button class="plusminus" ng-click="increment(item)"><img alt="increment" src="~/Images/Plus.png" class="plusminus"/></button>
+                                </td>
+                                <td>
+                                    <input type="text" readonly="readonly" ng-model="item.net" class="itemPrice"/>
+                                </td>
+                                <td>
+                                    <input type="text" readonly="readonly" ng-model="item.total" class="itemPrice"/>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="6" style="font-size: 20pt;"><strong>Subtotal</strong></td>
+                                <td colspan="1">
+                                    <input type="text" readonly="readonly" ng-model="$parent.totalNet" class="subtotalPrice"/>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="animate-switch" ng-switch-when="payment" ng-model="$scope">
+                <div class="checkoutCol" style="padding-top: 70px">
+                    <div class="customer" style="text-align: center">
+                        <h3>{{selectedCustomer.name}}</h3>
+                        <img alt="{{$parent.getCustomerName(selectedCustomer)}}" ng-src="{{$parent.getCustomerPhoto(selectedCustomer)}}" class="customerPhoto"/>
+                    </div>
+                </div>
+                <div class="checkoutCol" style="padding-top: 70px">
+                    <span style="font-size: 30pt; text-align: center">Authorizing payment<br/>
+                        <input type="text" readonly="readonly" ng-model="$parent.totalNet" class="authorizationPrice"/>
+                    </span><br/>
+                    <img alt="processing" src="~/Images/Processing.gif" style="text-align: center; padding-top: 70px;"/>
+                </div>
+            </div>
+            <div class="animate-switch" ng-switch-when="result" ng-model="$scope">
+                <div class="checkoutCol" style="padding-top: 70px">
+                    <div class="customer" style="text-align: center">
+                        <h3>{{selectedCustomer.name}}</h3>
+                        <img alt="{{$parent.getCustomerName(selectedCustomer)}}" ng-src="{{$parent.getCustomerPhoto(selectedCustomer)}}" class="customerPhoto"/>
+                    </div>
+                </div>
+                <div class="checkoutCol" style="padding-top: 70px">
+                    <span style="font-size: 30pt; text-align: center">{{$parent.activeTxStatus.txMessage}}<br/>
+                        <input type="text" readonly="readonly" ng-model="$parent.totalNet" class="authorizationPrice"/>
+                    </span><br/>
+                    <button ng-click="$parent.clearTransaction()" class="restart" type="submit">
+                        <img alt="Checkout Now" src="~/Images/Trash.png"  class="checkout"/> Restart
+                    </button>
+          </div>
+            </div>
+        </div>
+    </div>
+</div>
