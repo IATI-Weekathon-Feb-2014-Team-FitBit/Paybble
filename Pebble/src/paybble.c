@@ -17,7 +17,7 @@ static TextLayer *amount_layer;
 static BitmapLayer *sidebar_layer;
 static GBitmap *sidebar_image;
 
-static char current_trx[32+1];
+static char current_trx[40];
 
 void in_received_handler(DictionaryIterator *received, void *context)
 {
@@ -28,7 +28,7 @@ void in_received_handler(DictionaryIterator *received, void *context)
   if (place_tuple && amount_tuple && trx_tuple) {
     text_layer_set_text(place_layer, place_tuple->value->cstring);
     text_layer_set_text(amount_layer, amount_tuple->value->cstring);
-    strncpy(current_trx, trx_tuple->value->cstring, 32);
+    strncpy(current_trx, trx_tuple->value->cstring, sizeof(current_trx));
   } else {
     text_layer_set_text(place_layer, ":-(");
   }
