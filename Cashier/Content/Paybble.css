@@ -336,10 +336,11 @@ table.basket {
     table.basket th {
         text-align: center;
         vertical-align: middle;
+        font-size: 20pt;
     }
     table.basket td {
         padding: 0px;
-        font-size: 12pt;
+        font-size: 16pt;
         text-align: left;
     }
 
