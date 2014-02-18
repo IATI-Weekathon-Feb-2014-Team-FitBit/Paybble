@@ -249,18 +249,6 @@ ol.customer {
         opacity: 0.5;
     }
 
-    .customerClick.customerHover:active{
-        -webkit-transform:scale(10); 
-        -moz-transform:scale(10); 
-        -ms-transform:scale(10); 
-        -o-transform:scale(10); 
-        transform:scale(10); 
-        -webkit-box-shadow:0px 0px 20px #FFF; 
-        -moz-box-shadow:0px 0px 20px #FFF; 
-        -o-box-shadow:0px 0px 20px #FFF; 
-        box-shadow:0px 0px 20px #FFF; 
-    }
-
     .customerPhoto {
         max-width: 200px;
         height: auto;
