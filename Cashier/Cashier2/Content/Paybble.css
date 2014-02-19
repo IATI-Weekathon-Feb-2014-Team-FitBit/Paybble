@@ -101,7 +101,7 @@ h5, h6 {
 #body {
     background-color: #efeeef;
     clear: both;
-    padding-bottom: 35px;
+    padding-bottom: 20px;
 }
 
     .main-content {
@@ -115,14 +115,15 @@ h5, h6 {
     }
 
 header .content-wrapper {
-    padding-top: 20px; 
+    padding-top: 10px; 
 }
 
 footer {
     clear: both;
     background-color: #e2e2e2;
     font-size: .8em;
-    height: 40px;
+    max-height: 40px;
+    bottom: 100%;
 }
 
 
@@ -158,7 +159,7 @@ footer {
         background-image: -webkit-linear-gradient(left, #7ac0da 0%, #a4d4e6 100%);
         background-image: linear-gradient(left, #7ac0da 0%, #a4d4e6 100%);
         color: #3e5667;
-        padding: 20px 40px 30px 40px;
+        padding: 0px 40px 5px 40px;
     }
 
         .featured hgroup.title h1, .featured hgroup.title h2 {
@@ -336,11 +337,11 @@ table.basket {
     table.basket th {
         text-align: center;
         vertical-align: middle;
-        font-size: 20pt;
+        font-size: 18pt;
     }
     table.basket td {
         padding: 0px;
-        font-size: 16pt;
+        font-size: 14pt;
         text-align: left;
     }
 
@@ -348,14 +349,14 @@ table.basket {
     width: 100%;
     float: left;
     display: inline-block;
-    font-size: 20pt;
+    font-size: 18pt;
     font-weight: bold;
     vertical-align: top;
 }
 
 
 .selectedCustomerPhoto {
-    max-width: 100px;
+    max-width: 70px;
     padding-left: 30px;
     height: auto;
 }
@@ -856,7 +857,7 @@ tr.pager td {
     position: relative;
     background: white;
     border: 1px solid black;
-    height: 550px;
+    height: 510px;
     overflow: hidden;
     overflow-x:auto;
     overflow-y: auto;

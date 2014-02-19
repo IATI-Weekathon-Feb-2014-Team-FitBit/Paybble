@@ -200,7 +200,7 @@
     <div ng-controller="PaybbleCtrl">
         <div class="animate-switch-container" ng-switch on="stepSelected">
             <div class="animate-switch" ng-switch-when="customer" ng-model="$scope">
-                <h3>Customers in Queue</h3>
+                <div class="selectedCustomer">Customers in Queue</div>
 
                 <ol class="customer">
                     <li ng-repeat="cust in customers">
@@ -289,9 +289,9 @@
             </div>
             <div class="animate-switch" ng-switch-when="payment" ng-model="$scope">
                 <div class="checkoutCol" style="padding-top: 70px">
-                    <div class="customer" style="text-align: center">
-                        <h3>{{selectedCustomer.name}}</h3>
-                        <img alt="{{$parent.getCustomerName(selectedCustomer)}}" ng-src="{{$parent.getCustomerPhoto(selectedCustomer)}}" class="customerPhoto"/>
+                    <div class="selectedCustomer" style="text-align: center">
+                        Customer: {{selectedCustomer.name}}<br/>
+                        <img alt="{{$parent.getCustomerName(selectedCustomer)}}" ng-src="{{getCustomerPhoto(selectedCustomer)}}" class="customerPhoto"/>
                     </div>
                 </div>
                 <div class="checkoutCol" style="padding-top: 70px">
@@ -303,8 +303,8 @@
             </div>
             <div class="animate-switch" ng-switch-when="result" ng-model="$scope">
                 <div class="checkoutCol" style="padding-top: 70px">
-                    <div class="customer" style="text-align: center">
-                        <h3>{{selectedCustomer.name}}</h3>
+                    <div class="selectedCustomer" style="text-align: center">
+                        Customer: {{selectedCustomer.name}}<br/>
                         <img alt="{{$parent.getCustomerName(selectedCustomer)}}" ng-src="{{$parent.getCustomerPhoto(selectedCustomer)}}" class="customerPhoto"/>
                     </div>
                 </div>
