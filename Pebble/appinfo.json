@@ -1,0 +1,24 @@
+{
+  "uuid": "fad358d8-0e72-4e33-9140-5b983545bc3f",
+  "shortName": "Paybble",
+  "longName": "Paybble",
+  "companyName": "Weekathon",
+  "versionCode": 1,
+  "versionLabel": "1.0.0",
+  "watchapp": {
+    "watchface": false,
+    "only_shown_on_communication": true
+  },
+  "appKeys": {
+    "dummy": 0
+  },
+  "resources": {
+    "media": [
+      {
+       "type": "png",
+       "name": "IMAGE_SIDE_BAR",
+       "file": "images/sidebar.png"
+      }
+    ]
+  }
+}
